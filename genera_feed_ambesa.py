@@ -21,6 +21,7 @@ CAMBIO_EUR_USD = 1.15        # cambio fisso EUR -> USD
 IVA = 1.22                   # i prezzi Liberty sono IVA inclusa: per l'export si usa il netto
 MAX_PRODOTTI = 24            # limite Ambesa
 QTA_A_STOCK = 1              # quantità indicata per i motori a stock
+CATEGORIA = "Industrial Machinery///Power Transmission"   # categoria Ambesa (separatore ///)
 # --------------------------------------------------------
 
 URL_STOCK = "http://www.ricambiemotori.it/tools/feed.php?id=4"
@@ -131,6 +132,7 @@ def costruisci(r, a_stock):
 
     campi = {
         "product_code": f"CIR-{pid}",
+        "category": CATEGORIA,
         "name": nome,
         "price": str(prezzo),
         "quantity": str(QTA_A_STOCK if a_stock else 0),
