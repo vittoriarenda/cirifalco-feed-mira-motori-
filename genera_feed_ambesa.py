@@ -31,7 +31,7 @@ csv.field_size_limit(10_000_000)
 
 # Frasi italiane dei titoli -> (inglese, francese). L'ordine conta: prima le frasi più lunghe.
 FRASI = [
-    (r"con albero conico da (\d+) ?mm", r"with \1 mm tapered shaft", r"avec arbre conique \1 mm"),
+    (r"con albero conico (?:da )?(\d+) ?mm", r"with \1 mm tapered shaft", r"avec arbre conique \1 mm"),
     (r"albero conico (?:da )?(\d+) ?mm", r"\1 mm tapered shaft", r"arbre conique \1 mm"),
     (r"con albero cilindrico (?:da )?([\d,/ ]+) ?mm", r"with \1 mm straight shaft", r"avec arbre cylindrique \1 mm"),
     (r"albero cilindrico (?:da )?([\d,/ ]+) ?mm", r"\1 mm straight shaft", r"arbre cylindrique \1 mm"),
@@ -91,6 +91,7 @@ def traduci(titolo):
     base = re.sub(r"^[A-Z]\s*-\s*", "", titolo)              # toglie il prefisso "A - "
     base = re.sub(r"(?i)^motore\s+", "", base)
     base = re.sub(r"(?i)^rehlko\s+", "", base)
+    base = re.sub(r"(?i)^engine\s+", "", base)
     en, fr = base, base
     for it, e, f in FRASI:
         en = re.sub(rf"(?i)\b{it}\b", e, en)
@@ -113,7 +114,8 @@ def costruisci(r, a_stock):
     en, fr = traduci(titolo)
     fuel_en = "Diesel engine" if fuel == "diesel" else "Petrol engine"
     fuel_fr = "Moteur diesel" if fuel == "diesel" else "Moteur essence"
-    nome = f"{fuel_en} Rehlko {en} | {fuel_fr} Rehlko {fr}"[:250]
+    rif = f" – {codice}" if codice else ""
+    nome = f"{fuel_en} Rehlko {en}{rif} | {fuel_fr} Rehlko {fr}"[:250]
 
     disp_en = "In stock, ready to ship." if a_stock else "Available on order – contact us for lead time."
     disp_fr = "En stock, prêt à expédier." if a_stock else "Disponible sur commande – contactez-nous pour le délai."
