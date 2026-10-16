@@ -120,11 +120,14 @@ def parole_ricerca(titolo, codice, fuel):
             alt = "LDW" if sig == "KDW" else "KDW"
             base += [f"{alt}{n1}", f"{alt} {n1}"]
         modelli += base
-    parole = [PAROLE_BASE, PAROLE_DIESEL if fuel == "diesel" else PAROLE_BENZINA, " ".join(modelli)]
+    for pre, num in re.findall(r"\b(\d{1,2})\s?LD\s?-?(\d{3})", t):     # Lombardini 3LD510, 15LD 350
+        modelli += [f"{pre}LD{num}", f"{pre}LD {num}", f"{pre}LD-{num}"]
+    # le sigle restano intere (anche con lo spazio): solo le liste di parole generiche vanno spezzate
+    parole = PAROLE_BASE.split() + (PAROLE_DIESEL if fuel == "diesel" else PAROLE_BENZINA).split() + modelli
     if codice:
         parole += [codice, codice.replace("-", ""), codice.replace(" ", "")]
     visti, out = set(), []
-    for p in " ".join(parole).split():
+    for p in parole:
         k = p.lower()
         if k not in visti:
             visti.add(k)
