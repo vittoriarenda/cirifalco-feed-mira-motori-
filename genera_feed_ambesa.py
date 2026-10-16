@@ -21,7 +21,7 @@ CAMBIO_EUR_USD = 1.15        # cambio fisso EUR -> USD
 IVA = 1.22                   # i prezzi Liberty sono IVA inclusa: per l'export si usa il netto
 MAX_PRODOTTI = 24            # limite Ambesa
 QTA_A_STOCK = 1              # quantità indicata per i motori a stock
-CATEGORIA = "Industrial Machinery///Power Transmission"   # categoria Ambesa (separatore ///)
+CATEGORIA = "Industrial Machinery///Power Transmission///Motors"   # categoria Ambesa (separatore ///)
 # --------------------------------------------------------
 
 URL_STOCK = "http://www.ricambiemotori.it/tools/feed.php?id=4"
@@ -102,6 +102,36 @@ def traduci(titolo):
     return en, fr
 
 
+PAROLE_BASE = ("engine engines motor motors moteur moteurs rehlko kohler lombardini "
+               "original genuine industrial industriel")
+PAROLE_DIESEL = "diesel gasoil gazole diesel-engine generator generators genset groupe electrogene pump pompe"
+PAROLE_BENZINA = "petrol gasoline gas essence benzine small-engine generator lawn mower tondeuse pump pompe"
+
+
+def parole_ricerca(titolo, codice, fuel):
+    t = titolo.upper()
+    modelli = []
+    for m in re.findall(r"\b(KDW|LDW|KDI|KSD|KD|LD|CH|CV|XT|ECH|HD)\s?-?(\d{2,4})(?:\s?-?(\d{2,4}))?", t):
+        sig, n1, n2 = m
+        base = [f"{sig}{n1}", f"{sig} {n1}", f"{sig}-{n1}"]
+        if n2:
+            base += [f"{sig}{n1}-{n2}", f"{sig}{n1} {n2}", f"{sig}{n1}{n2}"]
+        if sig in ("KDW", "LDW"):
+            alt = "LDW" if sig == "KDW" else "KDW"
+            base += [f"{alt}{n1}", f"{alt} {n1}"]
+        modelli += base
+    parole = [PAROLE_BASE, PAROLE_DIESEL if fuel == "diesel" else PAROLE_BENZINA, " ".join(modelli)]
+    if codice:
+        parole += [codice, codice.replace("-", ""), codice.replace(" ", "")]
+    visti, out = set(), []
+    for p in " ".join(parole).split():
+        k = p.lower()
+        if k not in visti:
+            visti.add(k)
+            out.append(p)
+    return ", ".join(out)
+
+
 def costruisci(r, a_stock):
     titolo = pulisci(r.get("title") or r.get("nome_prodotto"))
     codice = (r.get("mpn") or r.get("codice_fornitore") or "").strip()
@@ -139,6 +169,7 @@ def costruisci(r, a_stock):
         "short_description": breve,
         "description": descr,
         "image_url": immagine,
+        "search_words": parole_ricerca(titolo, codice, fuel),
         "brand": "Rehlko",
         "part_number": codice,
         "fuel": fuel,
